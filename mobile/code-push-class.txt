@@ -1,0 +1,221 @@
+@startuml
+skinparam handwritten true
+
+
+title CodePush for React Native App
+package com.microsoft.codepush.react <<Frame>> {
+  class CodePush implements ReactPackage {
+      - CodePushUpdateManager mUpdateManager
+      - CodePushTelemetryManager mTelemetryManager
+      - SettingsManager mSettingsManager
+
+      - String mDeploymentKey
+      - {static} String mServerUrl = "https://codepush.azurewebsites.net/"
+      - Context mContext
+      - {static} ReactInstanceHolder mReactInstanceHolder
+      - {static} CodePush mCurrentInstance
+      + CodePush(deploymentKey,context, isDebugMode,serverUrl,keyResourceDescriptor)
+      + boolean didUpdate()
+      + String getAppVersion()
+      + String getAssetsBundleFileName()
+      long getBinaryResourcesModifiedTime()
+      + {static} String getBundleUrl(String assetsBundleFileName)
+      + Context getContext()
+      + {static} String getJSBundleFile(String assetsBundleFileName)
+      + String getJSBundleFileInternal(String assetsBundleFileName)
+      void invalidateCurrentInstance() {
+      - boolean isPackageBundleLatest(JSONObject packageMetadata)
+      - boolean hasBinaryVersionChanged(JSONObject packageMetadata)
+      boolean needToReportRollback()
+      + {static} void overrideAppVersion(String appVersionOverride)
+      - void rollbackPackage()
+      + void setNeedToReportRollback(boolean needToReportRollback)
+      + {static} boolean isUsingTestConfiguration()
+      + {static} void setUsingTestConfiguration(boolean shouldUseTestConfiguration) {
+      + void clearUpdates()
+      + List<NativeModule> createNativeModules(ReactApplicationContext reactApplicationContext)
+      + List<Class<? extends JavaScriptModule>> createJSModules()
+      + List<ViewManager> createViewManagers(ReactApplicationContext reactApplicationContext)
+  }
+    note top of CodePush
+    MainApplication.getJSBundleFile() -> CodePush.getJSBundleFile()
+
+    MainApplication.getPackages() -> new CodePush(...)
+    end note   
+  class CodePushUpdateManager {
+      - String mDocumentsDirectory
+      + CodePushUpdateManager(String documentsDirectory)
+      - String getDownloadFilePath()
+      - String getUnzippedFolderPath()
+      - String getDocumentsDirectory()
+      - String getCodePushPath()
+      - String getStatusFilePath()
+      + JSONObject getCurrentPackageInfo()
+      + void updateCurrentPackageInfo(JSONObject packageInfo)
+      + String getCurrentPackageFolderPath()
+      + String getCurrentPackageBundlePath(String bundleFileName)
+      + String getPackageFolderPath(String packageHash)
+      + String getCurrentPackageHash()
+      + String getPreviousPackageHash()
+      + JSONObject getCurrentPackage()
+      + JSONObject getPreviousPackage()
+      + JSONObject getPackage(String packageHash)
+      + void downloadPackage(updatePackage, expectedBundleFileName,progressCallback,stringKey)
+      + void installPackage(updatePackage,removePendingUpdate)
+      + void rollbackPackage()
+      + void downloadAndReplaceCurrentBundle(String remoteBundleUrl, String bundleFileName)
+      + void clearUpdates()
+  }
+
+  class CodePushTelemetryManager {
+      - SharedPreferences mSettings
+      - final String APP_VERSION_KEY = "appVersion"
+      - final String DEPLOYMENT_KEY_KEY = "deploymentKey"
+      - final String LABEL_KEY = "label"
+      - final String PACKAGE_KEY = "package"
+      - final String PREVIOUS_DEPLOYMENT_KEY_KEY = "previousDeploymentKey"
+      - final String PREVIOUS_LABEL_OR_APP_VERSION_KEY = "previousLabelOrAppVersion"
+      - final String STATUS_KEY = "status"
+      + CodePushTelemetryManager(Context applicationContext)
+      + WritableMap getBinaryUpdateReport(String appVersion)
+      + WritableMap getRetryStatusReport()
+      + WritableMap getRollbackReport(WritableMap lastFailedPackage)
+      + WritableMap getUpdateReport(WritableMap currentPackage)
+      + void recordStatusReported(ReadableMap statusReport)
+      + void saveStatusReportForRetry(ReadableMap statusReport)
+      - void clearRetryStatusReport()
+      - String getDeploymentKeyFromStatusReportIdentifier(String statusReportIdentifier)
+      - String getPackageStatusReportIdentifier(ReadableMap updatePackage)
+      - String getPreviousStatusReportIdentifier()
+      - String getVersionLabelFromStatusReportIdentifier(String statusReportIdentifier)
+      - boolean isStatusReportIdentifierCodePushLabel(String statusReportIdentifier)
+      - void saveStatusReportedForIdentifier(String appVersionOrPackageIdentifier)
+  }
+
+  class SettingsManager {
+      - SharedPreferences mSettings
+      + SettingsManager(Context applicationContext)
+      + JSONArray getFailedUpdates()
+      + JSONObject getPendingUpdate()
+      + boolean isFailedHash(String packageHash)
+      + boolean isPendingUpdate(String packageHash)
+      + void removeFailedUpdates()
+      + void removePendingUpdate()
+      + void saveFailedUpdate(JSONObject failedPackage)
+      + void savePendingUpdate(String packageHash, boolean isLoading)
+  }
+
+    class CodePushNativeModule extends ReactContextBaseJavaModule {
+        - String mBinaryContentsHash = null
+        - String mClientUniqueId = null
+        - LifecycleEventListener mLifecycleEventListener = null
+        - int mMinimumBackgroundDuration = 0
+
+        - CodePush mCodePush
+        - SettingsManager mSettingsManager
+        - CodePushTelemetryManager mTelemetryManager
+        - CodePushUpdateManager mUpdateManager
+
+        + CodePushNativeModule(reactContext, codePush,codePushUpdateManager,codePushTelemetryManager,settingsManager) 
+        + Map<String, Object> getConstants() 
+        + String getName() 
+
+        - void loadBundleLegacy()
+        - void setJSBundle(ReactInstanceManager instanceManager, String latestJSBundleFile)
+        - void loadBundle()
+        - void resetReactRootViews(ReactInstanceManager instanceManager) 
+        - void clearLifecycleEventListener() 
+        - ReactInstanceManager resolveInstanceManager()
+
+        + void downloadUpdate(updatePackage, notifyProgress, promise) 
+        + void getConfiguration(Promise promise) 
+        + void getUpdateMetadata(final int updateState, promise)
+        + void getNewStatusReport(promise) 
+        + void installUpdate(updatePackage,installMode,minimumBackgroundDuration, promise) 
+        + void isFailedUpdate(String packageHash, Promise promise)
+        + void isFirstRun(String packageHash, Promise promise)
+        + void notifyApplicationReady(Promise promise)
+        + void recordStatusReported(ReadableMap statusReport) 
+        + void restartApp(boolean onlyIfUpdateIsPending, Promise promise) 
+        + void saveStatusReportForRetry(ReadableMap statusReport) 
+        + void downloadAndReplaceCurrentBundle(String remoteBundleUrl)
+    }  
+    class CodePushDialog extends ReactContextBaseJavaModule{
+        + CodePushDialog(ReactApplicationContext reactContext) 
+        
+        + void showDialog(title, message, button1Text, button2Text, successCallback, errorCallback) 
+        - void showDialogInternal(title, message,button1Text, button2Text, successCallback,currentActivity) 
+        + String getName() 
+     
+    }
+
+    note top of CodePushDialog
+    getName : CodePushDialog
+    ReactMethod:
+    showDialog(...)
+    showDialogInternal(...)
+    end note   
+
+    note top of CodePushNativeModule
+    getName : CodePush
+    ReactMethod:
+    downloadUpdate(updatePackage, notifyProgress, promise) 
+    getConfiguration(Promise promise) 
+    getUpdateMetadata(final int updateState, promise)
+    getNewStatusReport(promise) 
+    installUpdate(updatePackage,installMode,minimumBackgroundDuration, promise) 
+    isFailedUpdate(String packageHash, Promise promise)
+    isFirstRun(String packageHash, Promise promise)
+    notifyApplicationReady(Promise promise)
+    recordStatusReported(ReadableMap statusReport) 
+    restartApp(boolean onlyIfUpdateIsPending, Promise promise) 
+    saveStatusReportForRetry(ReadableMap statusReport) 
+    downloadAndReplaceCurrentBundle(remoteBundleUrl)
+    end note       
+
+
+    CodePush -> CodePushNativeModule : new  CodePushNativeModule(...)
+    CodePush -> CodePushDialog : new CodePushDialog(...)
+}
+
+
+package app.react <<Frame>> {
+    class App {
+        componentDidMount()
+    }
+    note top of App
+    const CodePushOptions = { checkFrequency: CodePush.CheckFrequency.ON_APP_START };
+    ...
+    const updateDialogOptions = {
+        updateTitle: "You have an update",
+        optionalUpdateMessage: "Update available. Install?",
+        optionalIgnoreButtonLabel: "No",
+        optionalInstallButtonLabel: "Yes",
+    };    
+    ...
+    componentDidMount() {
+        CodePush.sync({
+            updateDialog: updateDialogOptions,
+            installMode: CodePush.InstallMode.IMMEDIATE
+        });
+    }
+    end note
+}
+
+package react.native.code.push <<Frame>> {
+    class CodePushTypeScript {
+        sync(syncOptions, syncStatusChangedCallback, downloadProgressCallback, handleBinaryVersionMismatchCallback) 
+    }
+
+    note top of CodePushTypeScript
+    CodePush.js
+    Parallel calls to sync() while one is ongoing yields 
+    CodePush.SyncStatus.SYNC_IN_PROGRESS.
+    const sync = (() => {
+    })();
+    end note
+}
+
+App -> CodePushTypeScript : sync(...)
+
+@enduml

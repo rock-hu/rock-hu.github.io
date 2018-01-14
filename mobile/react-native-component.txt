@@ -1,0 +1,44 @@
+@startuml
+skinparam handwritten true
+package "current hybrid app" {
+
+  folder "App Shell" {
+    [Request delegation]
+    [Device features invoke]
+    [SSL Pining]
+    [Hot Upgrade support]
+  }
+
+  folder "ClientPack" {
+    [JavaScript]
+    [HTML]
+    [NLS]
+    [Images]
+    [Fonts]
+  }
+  folder "Hot upgrade" {
+    [Content Server]
+    [Deployment tool]
+  }
+}
+
+package "react-native hybrid app" {
+  folder "React Native" {
+    [ReactNative]
+    [Okhttp]
+    [ReactNative CodePush]
+  }
+  folder "React Native Hot upgrade" {
+    [CodePush CLI]
+    [CodePushServer]
+    [JavaScript Bundle]
+    [NLS]
+    [Images]
+    [Fonts]
+  }
+  folder "View" {
+    [ReactJS]
+  }
+}
+
+@enduml

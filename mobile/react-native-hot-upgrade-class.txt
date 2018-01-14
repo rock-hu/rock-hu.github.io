@@ -1,0 +1,11 @@
+@startuml
+package com.facebook.react <<Frame>> {
+  interface ReactPackage {
+    List<NativeModule> createNativeModules(ReactApplicationContext reactContext)
+    List<ViewManager> createViewManagers(ReactApplicationContext reactContext);
+  }
+}
+
+
+
+@enduml

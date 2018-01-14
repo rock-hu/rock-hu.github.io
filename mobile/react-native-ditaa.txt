@@ -1,0 +1,13 @@
+@startditaa
++--------------------------------------------------+
+|React Component                                   |
+| class ReactNativeUniversal extends Component {   |
+|    ...                                           |        +-----------+       +-------------+
+|    render() {                                    |        |           |       |             |
+|        return (                                  +------->|  ReactJS  +------>| Browser DOM |
+|         <div>TODO:</div>                         |        |           |       |             |
+|         );                                       |        +-----------+       +-------------+
+|    }                                             |
+|}                                                 |
++--------------------------------------------------+
+@endditaa

@@ -1,0 +1,52 @@
+@startuml
+autonumber
+
+title CodePush for React Native App
+    note right
+    const CodePushOptions = { checkFrequency: CodePush.CheckFrequency.ON_APP_START };
+
+    const updateDialogOptions = {
+        updateTitle: "You have an update",
+        optionalUpdateMessage: "Update available. Install?",
+        optionalIgnoreButtonLabel: "No",
+        optionalInstallButtonLabel: "Yes",
+    };
+
+    componentDidMount() {
+        CodePush.sync({
+            updateDialog: updateDialogOptions,
+            installMode: CodePush.InstallMode.IMMEDIATE
+        });
+    }
+
+    ReactNativeUniversal = CodePush(CodePushOptions)(ReactNativeUniversal);
+    AppRegistry.registerComponent('ReactNativeUniversal', () => ReactNativeUniversal);
+
+    sync(syncOptions?,syncStatusChangedCallback?,downloadProgressCallback?,handleBinaryVersionMismatchCallback?)
+
+    react-native-code-push.d.ts -> CodePush.js : const sync
+
+    end note
+
+
+
+MainApplication -> MainApplication : getJSBundleFile()
+
+MainApplication -> CodePush : getJSBundleFile()
+CodePush --> MainApplication : js bundle file
+
+
+CodePush -> CodePush : getJSBundleFile("index.android.bundle")
+
+
+CodePush -> CodePush : getJSBundleFileInternal(assetsBundleFileName)
+
+CodePush -> CodePushUpdateManager : getCurrentPackageBundlePath(this.mAssetsBundleFileName)
+
+CodePushUpdateManager -> CodePush : packageFilePath
+
+CodePush -> CodePush : createNativeModules(reactApplicationContext)
+    CodePush -> CodePushNativeModule : new CodePushNativeModule(...)
+    CodePush -> CodePushDialog : new CodePushDialog(...)
+CodePush --> CodePush : nativeModules
+@enduml

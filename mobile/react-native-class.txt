@@ -1,0 +1,267 @@
+@startuml
+
+package com.facebook.react <<Frame>> {
+
+  abstract class ReactNativeHost {
+
+    - final Application mApplication;
+    - ReactInstanceManager mReactInstanceManager;
+
+    # ReactNativeHost(Application application)
+    + ReactInstanceManager getReactInstanceManager()
+
+    + boolean hasInstance()
+
+    + void clear()
+    # ReactInstanceManager createReactInstanceManager()
+    # RedBoxHandler getRedBoxHandler()
+    # JavaScriptExecutorFactory getJavaScriptExecutorFactory()
+
+    # final Application getApplication()
+    # UIImplementationProvider getUIImplementationProvider()
+    # String getJSMainModuleName()
+    # String getJSBundleFile()
+    # String getBundleAssetName()
+    + abstract boolean getUseDeveloperSupport();
+    # abstract List<ReactPackage> getPackages();
+  }
+
+
+  interface ReactPackage {
+    List<NativeModule> createNativeModules(ReactApplicationContext reactContext)
+    List<ViewManager> createViewManagers(ReactApplicationContext reactContext);
+  }
+  abstract class ReactInstancePackage implements ReactPackage {
+    + abstract List<NativeModule> createNativeModules(ReactApplicationContext reactContext,ReactInstanceManager reactInstanceManager);
+    + List<NativeModule> createNativeModules(ReactApplicationContext reactContext)
+  }
+  abstract class ReactActivity extends Activity implements DefaultHardwareBackBtnHandler, PermissionAwareActivity {
+
+    - final ReactActivityDelegate mDelegate;
+
+    # ReactActivity()
+
+    # String getMainComponentName()
+    # ReactActivityDelegate createReactActivityDelegate()
+
+    # void onCreate(Bundle savedInstanceState)
+
+    # void onPause()
+
+    # void onResume()
+
+    # void onDestroy()
+
+    + void onActivityResult(int requestCode, int resultCode, Intent data)
+
+    + boolean onKeyUp(int keyCode, KeyEvent event)
+
+    + void onBackPressed()
+
+    + void invokeDefaultOnBackPressed()
+    + void onNewIntent(Intent intent)
+
+    + void requestPermissions(String[] permissions,int requestCode,PermissionListener listener)
+    + void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grantResults)
+    # final ReactNativeHost getReactNativeHost()
+    # final ReactInstanceManager getReactInstanceManager()
+    # final void loadApp(String appKey)
+  }
+
+  class ReactActivityDelegate {
+
+    - final Activity mActivity;
+    - final FragmentActivity mFragmentActivity;
+    - final String mMainComponentName;
+
+    - ReactRootView mReactRootView;
+    - DoubleTapReloadRecognizer mDoubleTapReloadRecognizer;
+    - PermissionListener mPermissionListener;
+    - Callback mPermissionsCallback;
+
+    + ReactActivityDelegate(Activity activity, String mainComponentName)
+    + ReactActivityDelegate(FragmentActivity fragmentActivity,String mainComponentName)
+
+    # Bundle getLaunchOptions()
+    # ReactRootView createRootView()
+    # ReactNativeHost getReactNativeHost()
+    + ReactInstanceManager getReactInstanceManager()
+
+    # void onCreate(Bundle savedInstanceState)
+    # void loadApp(String appKey)
+    # void onPause()
+    # void onResume()
+    # void onDestroy()
+
+    + void onActivityResult(int requestCode, int resultCode, Intent data)
+    + boolean onKeyUp(int keyCode, KeyEvent event)
+    + boolean onBackPressed()
+    + boolean onNewIntent(Intent intent)
+    + void requestPermissions(String[] permissions,int requestCode,PermissionListener listener)
+    + void onRequestPermissionsResult(final int requestCode,final String[] permissions,final int[] grantResults)
+    - Context getContext()
+    - Activity getPlainActivity()
+  }
+  interface ReactApplication {
+    ReactNativeHost getReactNativeHost()
+  }
+
+}
+
+package com.microsoft.codepush.react <<Frame>> {
+
+
+  class CodePush implements ReactPackage {
+      - CodePushUpdateManager mUpdateManager;
+      - CodePushTelemetryManager mTelemetryManager;
+      - SettingsManager mSettingsManager;
+
+      - String mDeploymentKey;
+      - {static} String mServerUrl = "https://codepush.azurewebsites.net/";
+      - Context mContext;
+      - {static} ReactInstanceHolder mReactInstanceHolder;
+      - {static} CodePush mCurrentInstance;
+      + CodePush(String deploymentKey, Context context, boolean isDebugMode, String serverUrl, Integer keyResourceDescriptor)
+      + boolean didUpdate()
+      + String getAppVersion()
+      + String getAssetsBundleFileName()
+      long getBinaryResourcesModifiedTime()
+      + {static} String getBundleUrl(String assetsBundleFileName)
+      + Context getContext()
+      + {static} String getJSBundleFile(String assetsBundleFileName)
+      + String getJSBundleFileInternal(String assetsBundleFileName)
+      void invalidateCurrentInstance() {
+      - boolean isPackageBundleLatest(JSONObject packageMetadata)
+      - boolean hasBinaryVersionChanged(JSONObject packageMetadata)
+      boolean needToReportRollback()
+      + {static} void overrideAppVersion(String appVersionOverride)
+      - void rollbackPackage()
+      + void setNeedToReportRollback(boolean needToReportRollback)
+      + {static} boolean isUsingTestConfiguration()
+      + {static} void setUsingTestConfiguration(boolean shouldUseTestConfiguration) {
+      + void clearUpdates()
+      + List<NativeModule> createNativeModules(ReactApplicationContext reactApplicationContext)
+      + List<Class<? extends JavaScriptModule>> createJSModules()
+      + List<ViewManager> createViewManagers(ReactApplicationContext reactApplicationContext)
+  }
+
+  class CodePushUpdateManager {
+      - String mDocumentsDirectory;
+      + CodePushUpdateManager(String documentsDirectory)
+      - String getDownloadFilePath()
+      - String getUnzippedFolderPath()
+      - String getDocumentsDirectory()
+      - String getCodePushPath()
+      - String getStatusFilePath()
+      + JSONObject getCurrentPackageInfo()
+      + void updateCurrentPackageInfo(JSONObject packageInfo)
+      + String getCurrentPackageFolderPath()
+      + String getCurrentPackageBundlePath(String bundleFileName)
+      + String getPackageFolderPath(String packageHash)
+      + String getCurrentPackageHash()
+      + String getPreviousPackageHash()
+      + JSONObject getCurrentPackage()
+      + JSONObject getPreviousPackage()
+      + JSONObject getPackage(String packageHash)
+      + void downloadPackage(JSONObject updatePackage, String expectedBundleFileName,DownloadProgressCallback progressCallback,String string+Key)
+      + void installPackage(JSONObject updatePackage, boolean removePendingUpdate)
+      + void rollbackPackage()
+      + void downloadAndReplaceCurrentBundle(String remoteBundleUrl, String bundleFileName)
+      + void clearUpdates()
+  }
+
+  class CodePushTelemetryManager {
+      - SharedPreferences mSettings;
+      - final String APP_VERSION_KEY = "appVersion";
+      - final String DEPLOYMENT_KEY_KEY = "deploymentKey";
+      - final String LABEL_KEY = "label";
+      - final String PACKAGE_KEY = "package";
+      - final String PREVIOUS_DEPLOYMENT_KEY_KEY = "previousDeploymentKey";
+      - final String PREVIOUS_LABEL_OR_APP_VERSION_KEY = "previousLabelOrAppVersion";
+      - final String STATUS_KEY = "status";
+      + CodePushTelemetryManager(Context applicationContext)
+      + WritableMap getBinaryUpdateReport(String appVersion)
+      + WritableMap getRetryStatusReport()
+      + WritableMap getRollbackReport(WritableMap lastFailedPackage)
+      + WritableMap getUpdateReport(WritableMap currentPackage)
+      + void recordStatusReported(ReadableMap statusReport)
+      + void saveStatusReportForRetry(ReadableMap statusReport)
+      - void clearRetryStatusReport()
+      - String getDeploymentKeyFromStatusReportIdentifier(String statusReportIdentifier)
+      - String getPackageStatusReportIdentifier(ReadableMap updatePackage)
+      - String getPreviousStatusReportIdentifier()
+      - String getVersionLabelFromStatusReportIdentifier(String statusReportIdentifier)
+      - boolean isStatusReportIdentifierCodePushLabel(String statusReportIdentifier)
+      - void saveStatusReportedForIdentifier(String appVersionOrPackageIdentifier)
+  }
+
+  class SettingsManager {
+      - SharedPreferences mSettings;
+      + SettingsManager(Context applicationContext)
+      + JSONArray getFailedUpdates()
+      + JSONObject getPendingUpdate()
+      + boolean isFailedHash(String packageHash)
+      + boolean isPendingUpdate(String packageHash)
+      + void removeFailedUpdates()
+      + void removePendingUpdate()
+      + void saveFailedUpdate(JSONObject failedPackage)
+      + void savePendingUpdate(String packageHash, boolean isLoading)
+  }
+}
+
+
+package com.reactnativeuniversal <<Frame>> {
+  class MainActivity extends ReactActivity {
+      # void onCreate(Bundle savedInstanceState)
+      # String getMainComponentName()
+      + void onResume()
+      + void onPause()
+      + void onDestroy()
+      - void checkForCrashes()
+      - void checkForUpdates()
+      - void unregisterManagers()
+  }
+
+  class MainApplication extends Application implements ReactApplication {
+      - final ReactNativeHost mReactNativeHost
+      + ReactNativeHost getReactNativeHost()
+      + void onCreate()
+  }
+
+
+
+
+  class CustomReactNativeHost extends ReactNativeHost{
+    # ReactInstanceManager createReactInstanceManager()
+    + boolean getUseDeveloperSupport()
+    # String getJSBundleFile()
+    # List<ReactPackage> getPackages()
+  }
+
+}
+
+ReactActivity -> ReactActivityDelegate : new ReactActivityDelegate(this, getMainComponentName())
+MainApplication -> CustomReactNativeHost : getReactNativeHost
+
+ MainApplication -> CodePush : getJSBundleFile()
+
+
+package net.hockeyapp.android <<Frame>> {
+  class CrashManager {
+    + static void register(Context context, String urlString, String appIdentifier, CrashManagerListener listener)
+  }
+  class UpdateManager {
+    + static void register(Activity activity, String urlString, String appIdentifier, UpdateManagerListener listener, boolean isDialogRequired)
+  }
+}
+
+
+MainActivity -> CrashManager : register(context, urlString, appIdentifier, listener)
+MainActivity -> UpdateManager : register(activity, urlString, appIdentifier, listener, isDialogRequired)
+
+
+
+
+
+
+@enduml
